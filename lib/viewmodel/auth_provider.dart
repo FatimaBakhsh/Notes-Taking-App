@@ -5,48 +5,43 @@ class AuthProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   User? _user;
 
-  AuthProvider() {
-    _user = _auth.currentUser;
-  }
-
   User? get user => _user;
 
-  // ✅ Sign Up Method
+  AuthProvider() {
+    _auth.authStateChanges().listen((User? user) {
+      _user = user;
+      notifyListeners();
+    });
+  }
+
+  // Sign Up Function
   Future<void> signUp(String email, String password) async {
     try {
-      UserCredential userCredential =
-          await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      _user = userCredential.user;
-      notifyListeners(); // Notify UI of authentication change
+      await _auth.createUserWithEmailAndPassword(
+          email: email, password: password);
+      _user = _auth.currentUser; // Immediately set the user after signup
+      notifyListeners();
     } catch (e) {
-      throw e;
+      throw e.toString();
     }
   }
 
+  // Login Function
   Future<void> login(String email, String password) async {
     try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+      await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      _user = userCredential.user;
-      notifyListeners(); // Notify UI of authentication state change
+      notifyListeners();
     } catch (e) {
       throw Exception("Login failed: ${e.toString()}");
     }
   }
 
+  // Logout Function
   Future<void> logout() async {
-    try {
-      await _auth.signOut();
-      _user = null;
-      notifyListeners(); // Notify UI that user is logged out
-    } catch (e) {
-      throw Exception("Logout failed: ${e.toString()}");
-    }
+    await _auth.signOut();
+    notifyListeners();
   }
 }

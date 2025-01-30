@@ -19,6 +19,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   void initState() {
     super.initState();
     if (widget.note != null) {
+      // Populate the fields if the note is being edited
       titleController.text = widget.note!["title"];
       descriptionController.text = widget.note!["description"];
     }
@@ -53,15 +54,20 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
 
                 if (title.isNotEmpty && description.isNotEmpty) {
                   if (isEditing) {
+                    // If editing, update the existing note
                     noteProvider.editNote(
                       widget.note!["id"],
                       title,
                       description,
                     );
                   } else {
-                    noteProvider.addNote(title, description);
+                    // If adding, create a new note
+                    noteProvider.addNote({
+                      'title': title,
+                      'description': description,
+                    });
                   }
-                  Navigator.pop(context);
+                  Navigator.pop(context); // Go back to the previous screen
                 }
               },
               child: Text(isEditing ? "Update Note" : "Save Note"),

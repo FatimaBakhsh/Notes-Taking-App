@@ -1,44 +1,45 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class NoteProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _notes = [];
   List<Map<String, dynamic>> get notes => _notes;
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // Fetch notes from Firestore
   Future<void> fetchNotes() async {
-    try {
-      QuerySnapshot snapshot = await _firestore.collection('notes').get();
-      _notes = snapshot.docs.map((doc) {
+    final user = _auth.currentUser;
+    if (user != null) {
+      final querySnapshot = await _firestore
+          .collection('notes')
+          .where('userId', isEqualTo: user.uid)
+          .get();
+
+      _notes = querySnapshot.docs.map((doc) {
         return {
-          "id": doc.id,
-          "title": doc["title"],
-          "description": doc["description"],
+          'id': doc.id,
+          'title': doc['title'],
+          'description': doc['description'],
         };
       }).toList();
       notifyListeners();
-    } catch (e) {
-      print("Error fetching notes: $e");
     }
   }
 
   // Add new note
-  Future<void> addNote(String title, String description) async {
-    try {
-      DocumentReference docRef = await _firestore.collection('notes').add({
-        "title": title,
-        "description": description,
+  Future<void> addNote(Map<String, dynamic> noteData) async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await _firestore.collection('notes').add({
+        'userId': user.uid, // Store notes associated with the user's UID
+        'title': noteData['title'],
+        'description': noteData['description'],
+        'createdAt': Timestamp.now(),
       });
-      _notes.add({
-        "id": docRef.id,
-        "title": title,
-        "description": description,
-      });
-      notifyListeners();
-    } catch (e) {
-      print("Error adding note: $e");
+      fetchNotes(); // Refresh the notes after adding
     }
   }
 
