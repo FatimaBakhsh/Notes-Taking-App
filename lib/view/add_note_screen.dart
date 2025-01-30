@@ -3,6 +3,10 @@ import 'package:provider/provider.dart';
 import '../viewmodel/note_provider.dart';
 
 class AddNoteScreen extends StatefulWidget {
+  final Map<String, dynamic>? note; // Optional note for editing
+
+  const AddNoteScreen({Key? key, this.note}) : super(key: key);
+
   @override
   _AddNoteScreenState createState() => _AddNoteScreenState();
 }
@@ -12,11 +16,21 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   final TextEditingController descriptionController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.note != null) {
+      titleController.text = widget.note!["title"];
+      descriptionController.text = widget.note!["description"];
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final noteProvider = Provider.of<NoteProvider>(context, listen: false);
+    final isEditing = widget.note != null;
 
     return Scaffold(
-      appBar: AppBar(title: Text("Add Note")),
+      appBar: AppBar(title: Text(isEditing ? "Edit Note" : "Add Note")),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
@@ -25,24 +39,32 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
               controller: titleController,
               decoration: InputDecoration(labelText: "Title"),
             ),
+            SizedBox(height: 10),
             TextField(
               controller: descriptionController,
               decoration: InputDecoration(labelText: "Description"),
-              maxLines: 3,
+              maxLines: 5,
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () async {
-                if (titleController.text.isNotEmpty &&
-                    descriptionController.text.isNotEmpty) {
-                  await noteProvider.addNote(
-                    titleController.text,
-                    descriptionController.text,
-                  );
-                  Navigator.pop(context); // Return to HomeScreen
+              onPressed: () {
+                final title = titleController.text.trim();
+                final description = descriptionController.text.trim();
+
+                if (title.isNotEmpty && description.isNotEmpty) {
+                  if (isEditing) {
+                    noteProvider.editNote(
+                      widget.note!["id"],
+                      title,
+                      description,
+                    );
+                  } else {
+                    noteProvider.addNote(title, description);
+                  }
+                  Navigator.pop(context);
                 }
               },
-              child: Text("Save Note"),
+              child: Text(isEditing ? "Update Note" : "Save Note"),
             ),
           ],
         ),

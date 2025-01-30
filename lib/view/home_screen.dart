@@ -13,7 +13,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch notes when screen loads
     Provider.of<NoteProvider>(context, listen: false).fetchNotes();
   }
 
@@ -27,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text("Home"),
         actions: [
           Tooltip(
-            message: "Logout", // Shows "Logout" when hovered or long-pressed
+            message: "Logout",
             child: IconButton(
               icon: Icon(Icons.logout),
               onPressed: () async {
@@ -39,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
-          ),
+          )
         ],
       ),
       body: noteProvider.notes.isEmpty
@@ -53,6 +52,31 @@ class _HomeScreenState extends State<HomeScreen> {
                     title: Text(note["title"],
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Text(note["description"]),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Edit button
+                        IconButton(
+                          icon: Icon(Icons.edit, color: Colors.blue),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AddNoteScreen(note: note),
+                              ),
+                            );
+                          },
+                        ),
+                        // Delete button
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            Provider.of<NoteProvider>(context, listen: false)
+                                .deleteNote(note["id"]);
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
